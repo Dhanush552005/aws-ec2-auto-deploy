@@ -1,1 +1,30 @@
+
 name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo apt update
+            sudo apt install nginx -y
+            sudo systemctl start nginx
+            sudo systemctl enable nginx
+            sudo rm -rf /var/www/html/*
+            sudo cp -r ${{ github.workspace }}/* /var/www/html/
+            sudo systemctl restart nginx
