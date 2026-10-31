@@ -14,7 +14,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy to EC2
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "index.html"
+          target: "/home/ubuntu/"
+
+      - name: Deploy application
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -23,8 +32,7 @@ jobs:
           script: |
             sudo apt update
             sudo apt install nginx -y
-            sudo systemctl start nginx
             sudo systemctl enable nginx
-            sudo rm -rf /var/www/html/*
-            sudo cp -r ${{ github.workspace }}/* /var/www/html/
+            sudo systemctl start nginx
+            sudo cp /home/ubuntu/index.html /var/www/html/index.html
             sudo systemctl restart nginx
